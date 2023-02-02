@@ -468,7 +468,16 @@ async function checkWanchain(ip, port) {
     const node = `http://${ip}:${port}`;
     const provider = new ethers.providers.JsonRpcProvider(node);
     const isSyncing = await provider.send('eth_syncing');
-    return !isSyncing;
+    if (isSyncing) {
+      return false;
+    }
+    const blockNum = await provider.getBlockNumber();
+    const providerB = new ethers.providers.JsonRpcProvider('https://gwan-ssl.wandevs.org:56891');
+    const blockNumB = await providerB.getBlockNumber();
+    if (blockNumB - blockNum > 1) {
+      return false;
+    }
+    return true;
   } catch (error) {
     return false;
   }
@@ -476,7 +485,7 @@ async function checkWanchain(ip, port) {
 
 async function checkApplication(app, ip) {
   let isOK = true;
-  if (generalWebsiteApps.includes(app.name) || app.name.startsWith('themok6')) {
+  if (generalWebsiteApps.includes(app.name) || app.name.startsWith('themok')) {
     isOK = await generalWebsiteCheck(ip.split(':')[0], app.port || app.ports ? app.ports[0] : app.compose[0].ports[0], undefined, app.name);
   } else if (app.name === 'explorer') {
     isOK = await checkFluxExplorer(ip.split(':')[0], 39185);
